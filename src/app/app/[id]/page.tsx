@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { getAppById, getAppHistory } from '@/lib/data-loader';
 import { formatNumber, formatPercentage, getFaviconUrl } from '@/lib/utils';
 import { MONTH_DISPLAY, PLATFORM_CONFIGS } from '@/lib/types';
+import type { AppData } from '@/lib/types';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Props {
   params: {
@@ -14,16 +14,37 @@ interface Props {
 }
 
 export default function AppDetailPage({ params }: Props) {
-  const app = getAppById(params.id);
+  const [app, setApp] = useState<AppData | null>(null);
+  const [history, setHistory] = useState<AppData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Set document title dynamically
   useEffect(() => {
-    if (app) {
-      document.title = `${app.name} - VibeHunt`;
-    } else {
-      document.title = 'App Not Found - VibeHunt';
-    }
-  }, [app]);
+    fetch(`/api/app/${params.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.app) {
+          setApp(data.app);
+          setHistory(data.history);
+          document.title = `${data.app.name} - VibeHunt`;
+        } else {
+          document.title = 'App Not Found - VibeHunt';
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!app) {
     return (
@@ -39,8 +60,6 @@ export default function AppDetailPage({ params }: Props) {
     );
   }
 
-  // 获取历史数据
-  const history = getAppHistory(app.domain).sort((a, b) => a.timestamp - b.timestamp);
   const platformConfig = PLATFORM_CONFIGS[app.platform];
 
   const changeColor = app.change > 0 ? 'text-green-600' : app.change < 0 ? 'text-red-600' : 'text-gray-500';
