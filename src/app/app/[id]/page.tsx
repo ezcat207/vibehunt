@@ -120,19 +120,60 @@ export default function AppDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Metrics */}
+        {/* About */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Metrics</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Month</p>
-              <p className="text-lg font-semibold text-gray-900">{MONTH_DISPLAY[app.month] || app.month}</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">About This App</h2>
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Platform</p>
+              <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-900 text-white capitalize">
+                {app.platform}
+              </span>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Keywords Tracked</p>
-              <p className="text-lg font-semibold text-gray-900">{app.keywordCount}</p>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Current Month</p>
+              <p className="text-gray-900">{MONTH_DISPLAY[app.month] || app.month}</p>
             </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Performance Summary</p>
+              <p className="text-gray-900">
+                Ranked #{app.rank} on {app.platform} with {formatNumber(app.visits)} monthly visits.
+                {app.change > 0 && ` Growing ${formatPercentage(app.change)} compared to previous period.`}
+                {app.change < 0 && ` Declined ${formatPercentage(Math.abs(app.change))} compared to previous period.`}
+                {app.change === 0 && ' Stable traffic compared to previous period.'}
+              </p>
+            </div>
+            {app.keywordCount > 0 && (
+              <div>
+                <p className="text-sm text-gray-600 mb-1">SEO Keywords</p>
+                <p className="text-gray-900">{app.keywordCount} keywords tracked</p>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Preview Card */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Preview</h2>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <iframe
+              src={`https://${app.url}`}
+              className="w-full h-[500px]"
+              sandbox="allow-scripts allow-same-origin"
+              title={`Preview of ${app.name}`}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Preview may not work for all apps due to security restrictions.{' '}
+            <a
+              href={`https://${app.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-700"
+            >
+              Visit directly →
+            </a>
+          </p>
         </div>
 
         {/* Historical Data */}

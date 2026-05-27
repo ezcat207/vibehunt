@@ -258,7 +258,9 @@ function processMonthData(
     const change = changeList[i] ? parseChange(changeList[i]) : 0;
     const keywordCount = keywordsList[i] ? parseInt(keywordsList[i]) : 0;
 
-    const id = `${platform}-${domain.replace(/\./g, '-')}-${month.replace(/-/g, '')}`;
+    // 使用完整 URL（包含路径）生成唯一 ID
+    const urlHash = url.replace(/[^a-zA-Z0-9]/g, '-');
+    const id = `${platform}-${urlHash}-${month.replace(/-/g, '')}`;
 
     // 解析时间戳
     const [year, monthNum] = month.split('-').map(Number);
@@ -273,7 +275,7 @@ function processMonthData(
       rank,
       visits,
       change,
-      keywords: [], // 关键词需要从后续行解析，暂时留空
+      keywords: [], // 暂时留空，后续可以从额外数据源补充
       keywordCount,
       month,
       timestamp,

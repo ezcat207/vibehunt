@@ -2,19 +2,22 @@
 
 import { useState, useMemo } from 'react';
 import { AppCard } from '@/components/app/AppCard';
+import { PlatformFilter } from '@/components/filters/PlatformFilter';
 import { TimeFilter } from '@/components/filters/TimeFilter';
 import { SortFilter } from '@/components/filters/SortFilter';
 import { SearchBar } from '@/components/filters/SearchBar';
-import { loadAppsData } from '@/lib/data-loader';
-import type { AppData } from '@/lib/types';
+import { loadAppsData, getPlatformStats } from '@/lib/data-loader';
+import type { AppData, Platform } from '@/lib/types';
 
 export default function Home() {
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'visits' | 'change' | 'keywords' | 'rank'>('rank');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 加载数据（目前只有 Vercel）
-  const allApps = useMemo(() => loadAppsData('vercel'), []);
+  // 加载数据
+  const allApps = useMemo(() => loadAppsData(selectedPlatform), [selectedPlatform]);
+  const stats = useMemo(() => getPlatformStats(), []);
 
   // 筛选和排序逻辑
   const filteredApps = useMemo(() => {
@@ -81,22 +84,21 @@ export default function Home() {
       {/* Filters */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-6 flex-wrap">
-            <TimeFilter
-              selectedMonth={selectedMonth}
-              onChange={setSelectedMonth}
+          <div className="space-y-3">
+            <PlatformFilter
+              selectedPlatform={selectedPlatform}
+              onChange={setSelectedPlatform}
+              stats={stats}
             />
-            <SortFilter
-              selectedSort={sortBy}
-              onChange={setSortBy}
-            />
-
-            {/* Platform badge (currently only Vercel) */}
-            <div className="ml-auto flex items-center gap-2">
-              <span className="text-sm text-gray-600">Platform:</span>
-              <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-900 text-white">
-                Vercel
-              </span>
+            <div className="flex items-center gap-6 flex-wrap">
+              <TimeFilter
+                selectedMonth={selectedMonth}
+                onChange={setSelectedMonth}
+              />
+              <SortFilter
+                selectedSort={sortBy}
+                onChange={setSortBy}
+              />
             </div>
           </div>
         </div>

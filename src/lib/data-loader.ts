@@ -1,26 +1,51 @@
 import type { AppData, Platform } from './types';
 import vercelData from '../../data/processed/vercel.json';
+import lovableData from '../../data/processed/lovable.json';
+import base44Data from '../../data/processed/base44.json';
+import youwareData from '../../data/processed/youware.json';
 
 /**
  * 加载指定平台的应用数据
  */
 export function loadAppsData(platform: Platform): AppData[] {
   if (platform === 'all') {
-    // TODO: 加载所有平台数据
-    return vercelData as AppData[];
+    // 合并所有平台数据
+    return [
+      ...(vercelData as AppData[]),
+      ...(lovableData as AppData[]),
+      ...(base44Data as AppData[]),
+      ...(youwareData as AppData[]),
+    ];
   }
 
   switch (platform) {
     case 'vercel':
       return vercelData as AppData[];
     case 'lovable':
+      return lovableData as AppData[];
     case 'base44':
+      return base44Data as AppData[];
     case 'youware':
-      // TODO: 加载其他平台数据
-      return [];
+      return youwareData as AppData[];
     default:
       return [];
   }
+}
+
+/**
+ * 获取平台统计信息
+ */
+export function getPlatformStats() {
+  return {
+    vercel: (vercelData as AppData[]).length,
+    lovable: (lovableData as AppData[]).length,
+    base44: (base44Data as AppData[]).length,
+    youware: (youwareData as AppData[]).length,
+    all: (vercelData as AppData[]).length +
+         (lovableData as AppData[]).length +
+         (base44Data as AppData[]).length +
+         (youwareData as AppData[]).length,
+  };
 }
 
 /**
