@@ -1,11 +1,9 @@
-'use client';
-
 import Link from 'next/link';
+import { getAppById, getAppHistory } from '@/lib/data-loader';
 import { formatNumber, formatPercentage, getFaviconUrl } from '@/lib/utils';
 import { MONTH_DISPLAY, PLATFORM_CONFIGS } from '@/lib/types';
-import type { AppData } from '@/lib/types';
-
-import { useEffect, useState } from 'react';
+import type { Metadata } from 'next';
+import Image from 'next/image';
 
 interface Props {
   params: {
@@ -13,38 +11,23 @@ interface Props {
   };
 }
 
-export default function AppDetailPage({ params }: Props) {
-  const [app, setApp] = useState<AppData | null>(null);
-  const [history, setHistory] = useState<AppData[]>([]);
-  const [loading, setLoading] = useState(true);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const app = getAppById(params.id);
 
-  useEffect(() => {
-    fetch(`/api/app/${params.id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.app) {
-          setApp(data.app);
-          setHistory(data.history);
-          document.title = `${data.app.name} - VibeHunt`;
-        } else {
-          document.title = 'App Not Found - VibeHunt';
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, [params.id]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+  if (!app) {
+    return {
+      title: 'App Not Found - VibeHunt',
+    };
   }
+
+  return {
+    title: `${app.name} - VibeHunt`,
+    description: `${app.name} ranks #${app.rank} on ${app.platform} with ${formatNumber(app.visits)} monthly visits. Growth: ${formatPercentage(app.change)}.`,
+  };
+}
+
+export default function AppDetailPage({ params }: Props) {
+  const app = getAppById(params.id);
 
   if (!app) {
     return (
@@ -60,6 +43,7 @@ export default function AppDetailPage({ params }: Props) {
     );
   }
 
+  const history = getAppHistory(app.domain).sort((a, b) => a.timestamp - b.timestamp);
   const platformConfig = PLATFORM_CONFIGS[app.platform];
 
   const changeColor = app.change > 0 ? 'text-green-600' : app.change < 0 ? 'text-red-600' : 'text-gray-500';
@@ -86,14 +70,11 @@ export default function AppDetailPage({ params }: Props) {
           {/* App Header with gradient background */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 border-b border-gray-200">
             <div className="flex items-start gap-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={getFaviconUrl(app.domain, 128)}
                 alt={app.name}
                 className="w-20 h-20 rounded-xl shadow-md bg-white p-2"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22128%22 height=%22128%22%3E%3Crect width=%22128%22 height=%22128%22 fill=%22%23ddd%22/%3E%3C/svg%3E';
-                }}
               />
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
