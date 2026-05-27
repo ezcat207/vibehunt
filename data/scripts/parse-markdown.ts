@@ -114,12 +114,21 @@ function parsePlatformMarkdown(filePath: string, platform: Platform): AppData[] 
   let inVisitsSection = false;
   let inChangeSection = false;
   let inKeywordsSection = false;
+  let skipNextLine = false; // 用于跳过 visits 区域的分享百分比行
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
+
+    // 跳过标记的行（用于跳过分享百分比）
+    if (skipNextLine) {
+      skipNextLine = false;
+      continue;
+    }
+
     // 检测月份标记
     if (line.includes('明细对象：')) {
+
       // 保存上一个月的数据
       if (currentMonth && urlList.length > 0) {
         processMonthData(
@@ -147,6 +156,7 @@ function parsePlatformMarkdown(filePath: string, platform: Platform): AppData[] 
       inVisitsSection = false;
       inChangeSection = false;
       inKeywordsSection = false;
+      skipNextLine = false;
       continue;
     }
 
@@ -160,12 +170,14 @@ function parsePlatformMarkdown(filePath: string, platform: Platform): AppData[] 
         inChangeSection = false;
         inKeywordsSection = false;
         rankList.push(num);
+        continue; // 只有在是排名时才 continue
       }
-      continue;
+      // 如果数字 > 100，可能是访问量，继续往下检查
     }
 
     // 检测 URL 部分（包含 .app 域名）
-    if (line.includes(`.${platform}.app`)) {
+    // 但只在还没开始收集访问量时才收集URL
+    if (line.includes(`.${platform}.app`) && visitsList.length === 0) {
       inRankSection = false;
       inUrlSection = true;
       inVisitsSection = false;
@@ -180,28 +192,35 @@ function parsePlatformMarkdown(filePath: string, platform: Platform): AppData[] 
 
     // 检测访问量（包含 K 或数字，但不是百分比）
     if ((line.includes('K') || line.includes('M') || /^\d{1,3}(,\d{3})*(\.\d+)?$/.test(line) || line === '< 50') && !line.includes('%')) {
-      inRankSection = false;
-      inUrlSection = false;
-      inVisitsSection = true;
-      inChangeSection = false;
-      inKeywordsSection = false;
+      // 只有在 URL 收集完成后才开始收集访问量（至少 20 个 URL）
+      if (urlList.length >= 20 && visitsList.length < 200) {
+        inRankSection = false;
+        inUrlSection = false;
+        inVisitsSection = true;
+        inChangeSection = false;
+        inKeywordsSection = false;
 
-      const visits = line.replace('→', '').trim();
-      visitsList.push(visits);
-      continue;
+        const visits = line.replace('→', '').trim();
+        visitsList.push(visits);
+        skipNextLine = true; // 标记跳过下一行（分享百分比）
+        continue;
+      }
     }
 
     // 检测变动百分比
     if (line.includes('%') || line === '新' || (line === '-' && inChangeSection)) {
-      inRankSection = false;
-      inUrlSection = false;
-      inVisitsSection = false;
-      inChangeSection = true;
-      inKeywordsSection = false;
+      // 只有在访问量收集完成后才开始收集变动百分比
+      if (visitsList.length >= 20 && visitsList.length === urlList.length) { // 确保访问量数量匹配 URL 数量
+        inRankSection = false;
+        inUrlSection = false;
+        inVisitsSection = false;
+        inChangeSection = true;
+        inKeywordsSection = false;
 
-      const change = line.replace('→', '').trim();
-      changeList.push(change);
-      continue;
+        const change = line.replace('→', '').trim();
+        changeList.push(change);
+        continue;
+      }
     }
 
     // 检测关键词（"所有关键词"前的数字）
