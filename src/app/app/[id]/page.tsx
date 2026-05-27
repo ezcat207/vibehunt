@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { getAppById, getAppHistory } from '@/lib/data-loader';
 import { formatNumber, formatPercentage, getFaviconUrl } from '@/lib/utils';
 import { MONTH_DISPLAY, PLATFORM_CONFIGS } from '@/lib/types';
+import { getAppAnalysis } from '@/lib/app-analysis';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 
 interface Props {
   params: {
@@ -45,6 +45,7 @@ export default function AppDetailPage({ params }: Props) {
 
   const history = getAppHistory(app.domain, app.platform).sort((a, b) => a.timestamp - b.timestamp);
   const platformConfig = PLATFORM_CONFIGS[app.platform];
+  const analysis = app.rank <= 3 ? getAppAnalysis(app.domain) : null;
 
   const changeColor = app.change > 0 ? 'text-green-600' : app.change < 0 ? 'text-red-600' : 'text-gray-500';
   const changeBgColor = app.change > 0 ? 'bg-green-50' : app.change < 0 ? 'bg-red-50' : 'bg-gray-50';
@@ -148,6 +149,50 @@ export default function AppDetailPage({ params }: Props) {
             )}
           </p>
         </div>
+
+        {/* Deep Analysis for Top 3 */}
+        {analysis && (
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-2xl">🔬</span>
+              <h2 className="text-lg font-bold text-gray-900">深度产品分析</h2>
+              <span className="ml-auto text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">Top {app.rank} · {platformConfig.displayName}</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { icon: '💡', label: '解决什么问题？', text: analysis.problem },
+                { icon: '👤', label: '用户是谁？', text: analysis.users },
+                { icon: '🤔', label: '用户为什么需要它？', text: analysis.whyNeed },
+                { icon: '🗣️', label: '用户是如何评价它的？', text: analysis.reviews },
+                { icon: '🔍', label: '如何找到用户？', text: analysis.acquisition },
+                { icon: '💰', label: '它赚钱吗？多少？', text: analysis.revenue },
+                { icon: '🧠', label: '从它身上学到了什么？', text: analysis.learnings },
+                { icon: '⛰️', label: '什么做法不容易复制？', text: analysis.hardPart },
+              ].map(({ icon, label, text }) => (
+                <div key={label} className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                    {icon} {label}
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { icon: '🎯', label: '一句话推销', text: analysis.pitch },
+                { icon: '💡', label: '不同的实现方法', text: analysis.alternatives },
+                { icon: '🧭', label: '如何找到第一批用户', text: analysis.userFinding },
+              ].map(({ icon, label, text }) => (
+                <div key={label} className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                  <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">
+                    {icon} {label}
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Historical Performance */}
         {history.length > 1 && (

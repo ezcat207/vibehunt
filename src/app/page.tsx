@@ -1,22 +1,43 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { AppCard } from '@/components/app/AppCard';
 import { PlatformFilter } from '@/components/filters/PlatformFilter';
 import { TimeFilter } from '@/components/filters/TimeFilter';
 import { SortFilter } from '@/components/filters/SortFilter';
 import { SearchBar } from '@/components/filters/SearchBar';
 import { loadAppsData, getPlatformStats } from '@/lib/data-loader';
-import type { AppData, Platform } from '@/lib/types';
+import { formatNumber, formatPercentage } from '@/lib/utils';
+import { PLATFORM_CONFIGS, MONTH_DISPLAY } from '@/lib/types';
+import type { Platform } from '@/lib/types';
+
+type ViewMode = 'grid' | 'top10';
+type RankedPlatform = Exclude<Platform, 'all'>;
 
 export default function Home() {
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'visits' | 'change' | 'keywords' | 'rank'>('rank');
   const [searchQuery, setSearchQuery] = useState('');
+  const [top10Platform, setTop10Platform] = useState<RankedPlatform>('vercel');
 
   // 加载数据
   const allApps = useMemo(() => loadAppsData(selectedPlatform), [selectedPlatform]);
+
+  // Top 10 leaderboard data
+  const top10Data = useMemo(() => {
+    const platformApps = loadAppsData(top10Platform);
+    const months = [...new Set(platformApps.map(a => a.month))].sort().reverse();
+    return months.map(month => ({
+      month,
+      apps: platformApps
+        .filter(a => a.month === month)
+        .sort((a, b) => a.rank - b.rank)
+        .slice(0, 10),
+    }));
+  }, [top10Platform]);
   const stats = useMemo(() => getPlatformStats(), []);
 
   // 筛选和排序逻辑
@@ -66,47 +87,167 @@ export default function Home() {
               <h1 className="text-3xl font-bold text-gray-900">VibeHunt</h1>
               <p className="text-sm text-gray-600 mt-1">Discover trending Vibe Coding apps</p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span className="font-medium">{filteredApps.length}</span>
-              <span>apps found</span>
+            {/* View mode toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                All Apps
+              </button>
+              <button
+                onClick={() => setViewMode('top10')}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'top10' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                🏆 Top 10 榜单
+              </button>
             </div>
           </div>
 
-          {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by name, domain, or URL..."
-          />
+          {viewMode === 'grid' && (
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by name, domain, or URL..."
+            />
+          )}
         </div>
       </header>
 
-      {/* Filters */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="space-y-3">
-            <PlatformFilter
-              selectedPlatform={selectedPlatform}
-              onChange={setSelectedPlatform}
-              stats={stats}
-            />
-            <div className="flex items-center gap-6 flex-wrap">
-              <TimeFilter
-                selectedMonth={selectedMonth}
-                onChange={setSelectedMonth}
+      {viewMode === 'grid' && (
+        /* Filters for grid view */
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="space-y-3">
+              <PlatformFilter
+                selectedPlatform={selectedPlatform}
+                onChange={setSelectedPlatform}
+                stats={stats}
               />
-              <SortFilter
-                selectedSort={sortBy}
-                onChange={setSortBy}
-              />
+              <div className="flex items-center gap-6 flex-wrap">
+                <TimeFilter
+                  selectedMonth={selectedMonth}
+                  onChange={setSelectedMonth}
+                />
+                <SortFilter
+                  selectedSort={sortBy}
+                  onChange={setSortBy}
+                />
+                <span className="ml-auto text-sm text-gray-500">
+                  <span className="font-medium text-gray-900">{filteredApps.length}</span> apps
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {filteredApps.length === 0 ? (
+        {viewMode === 'top10' ? (
+          /* Top 10 Leaderboard View */
+          <div>
+            {/* Platform selector */}
+            <div className="flex items-center gap-3 mb-6 flex-wrap">
+              <span className="text-sm font-medium text-gray-700">平台：</span>
+              {(['vercel', 'lovable', 'base44', 'youware'] as RankedPlatform[]).map(p => {
+                const cfg = PLATFORM_CONFIGS[p];
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setTop10Platform(p)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border-2 ${
+                      top10Platform === p
+                        ? 'text-white shadow-md scale-105'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                    }`}
+                    style={top10Platform === p ? { backgroundColor: cfg.color, borderColor: cfg.color } : {}}
+                  >
+                    {cfg.displayName}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Leaderboard tables per month */}
+            <div className="space-y-8">
+              {top10Data.map(({ month, apps }) => (
+                <div key={month} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                  <div
+                    className="px-6 py-3 flex items-center gap-2"
+                    style={{ backgroundColor: PLATFORM_CONFIGS[top10Platform].color }}
+                  >
+                    <span className="text-white font-semibold">{MONTH_DISPLAY[month] || month}</span>
+                    <span className="ml-auto text-white/80 text-sm">{PLATFORM_CONFIGS[top10Platform].displayName} Top 10</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase w-12">排名</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">应用</th>
+                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">月访问</th>
+                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">增长</th>
+                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">关键词</th>
+                          <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-20">详情</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {apps.map((app, idx) => {
+                          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+                          return (
+                            <tr key={app.id} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-4 py-4 whitespace-nowrap text-center">
+                                {medal ? (
+                                  <span className="text-xl">{medal}</span>
+                                ) : (
+                                  <span className="text-sm font-bold text-gray-400">#{app.rank}</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-3">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={`https://www.google.com/s2/favicons?domain=${app.domain}&sz=32`}
+                                    alt={app.name}
+                                    className="w-7 h-7 rounded bg-gray-100"
+                                  />
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-900">{app.name}</p>
+                                    <p className="text-xs text-gray-400">{app.domain}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-right">
+                                <span className="text-sm font-semibold text-gray-900">{formatNumber(app.visits)}</span>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-right">
+                                <span className={`text-sm font-semibold ${app.change > 0 ? 'text-green-600' : app.change < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                                  {app.change > 0 ? '↑' : app.change < 0 ? '↓' : '→'} {formatPercentage(app.change)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                                {app.keywordCount}
+                              </td>
+                              <td className="px-4 py-4 text-center">
+                                <Link
+                                  href={`/app/${app.id}`}
+                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                                >
+                                  详情 →
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : filteredApps.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
