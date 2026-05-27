@@ -43,7 +43,7 @@ export default function AppDetailPage({ params }: Props) {
     );
   }
 
-  const history = getAppHistory(app.domain).sort((a, b) => a.timestamp - b.timestamp);
+  const history = getAppHistory(app.domain, app.platform).sort((a, b) => a.timestamp - b.timestamp);
   const platformConfig = PLATFORM_CONFIGS[app.platform];
 
   const changeColor = app.change > 0 ? 'text-green-600' : app.change < 0 ? 'text-red-600' : 'text-gray-500';
