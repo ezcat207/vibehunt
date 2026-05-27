@@ -1,4 +1,4 @@
-import Link from 'next';
+import Link from 'next/link';
 import { getAppById, getAppHistory } from '@/lib/data-loader';
 import { formatNumber, formatPercentage, getFaviconUrl } from '@/lib/utils';
 import { MONTH_DISPLAY } from '@/lib/types';
