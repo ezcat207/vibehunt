@@ -1,8 +1,11 @@
+'use client';
+
 import Link from 'next/link';
 import { getAppById, getAppHistory } from '@/lib/data-loader';
 import { formatNumber, formatPercentage, getFaviconUrl } from '@/lib/utils';
 import { MONTH_DISPLAY, PLATFORM_CONFIGS } from '@/lib/types';
-import type { Metadata } from 'next';
+
+import { useEffect } from 'react';
 
 interface Props {
   params: {
@@ -10,23 +13,17 @@ interface Props {
   };
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const app = getAppById(params.id);
-
-  if (!app) {
-    return {
-      title: 'App Not Found - VibeHunt',
-    };
-  }
-
-  return {
-    title: `${app.name} - VibeHunt`,
-    description: `${app.name} ranks #${app.rank} on ${app.platform} with ${formatNumber(app.visits)} monthly visits. Growth: ${formatPercentage(app.change)}.`,
-  };
-}
-
 export default function AppDetailPage({ params }: Props) {
   const app = getAppById(params.id);
+
+  // Set document title dynamically
+  useEffect(() => {
+    if (app) {
+      document.title = `${app.name} - VibeHunt`;
+    } else {
+      document.title = 'App Not Found - VibeHunt';
+    }
+  }, [app]);
 
   if (!app) {
     return (
