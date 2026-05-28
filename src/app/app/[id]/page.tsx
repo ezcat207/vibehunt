@@ -45,7 +45,7 @@ export default function AppDetailPage({ params }: Props) {
     );
   }
 
-  const history = getAppHistory(app.domain, app.platform).sort((a, b) => a.timestamp - b.timestamp);
+  const history = getAppHistory(app.url, app.platform).sort((a, b) => a.timestamp - b.timestamp);
   const analysis = app.rank <= 3 ? getAppAnalysis(app.domain) : null;
 
   return <DetailPageClient app={app} history={history} analysis={analysis} />;

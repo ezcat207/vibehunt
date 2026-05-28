@@ -57,11 +57,11 @@ export function getAppById(id: string, platform?: Platform): AppData | null {
 }
 
 /**
- * 获取应用的历史数据（跨月）
+ * 获取应用的历史数据（跨月）- 按精确 URL 匹配，避免同域名不同路径混入
  */
-export function getAppHistory(domain: string, platform?: Platform): AppData[] {
+export function getAppHistory(url: string, platform?: Platform): AppData[] {
   const apps = platform ? loadAppsData(platform) : loadAppsData('all');
-  return apps.filter(app => app.domain === domain);
+  return apps.filter(app => app.url === url);
 }
 
 /**
