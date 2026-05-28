@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function DetailPageClient({ app, history, analysis }: Props) {
-  const { lang } = useLang();
+  const { lang, toggle } = useLang();
   const platformConfig = PLATFORM_CONFIGS[app.platform];
 
   const changeColor = app.change > 0 ? 'text-green-600' : app.change < 0 ? 'text-red-600' : 'text-gray-500';
@@ -35,6 +35,12 @@ export function DetailPageClient({ app, history, analysis }: Props) {
             </svg>
             {t[lang].backToAll}
           </Link>
+          <button
+            onClick={toggle}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm transition-all"
+          >
+            {lang === 'en' ? '中文' : 'EN'}
+          </button>
         </div>
       </header>
 
@@ -82,7 +88,7 @@ export function DetailPageClient({ app, history, analysis }: Props) {
           </div>
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-3 divide-x divide-gray-200">
+          <div className={`grid divide-x divide-gray-200 ${app.keywordCount > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <div className="p-6 text-center">
               <p className="text-sm text-gray-600 mb-2">{t[lang].monthlyVisits}</p>
               <p className="text-3xl font-bold text-gray-900">{formatNumber(app.visits)}</p>
@@ -95,11 +101,13 @@ export function DetailPageClient({ app, history, analysis }: Props) {
               </p>
               <p className="text-xs text-gray-500 mt-1">{t[lang].vsPrevMonth}</p>
             </div>
-            <div className="p-6 text-center">
-              <p className="text-sm text-gray-600 mb-2">{t[lang].seoKeywords}</p>
-              <p className="text-3xl font-bold text-gray-900">{app.keywordCount}</p>
-              <p className="text-xs text-gray-500 mt-1">{t[lang].trackedKeywords}</p>
-            </div>
+            {app.keywordCount > 0 && (
+              <div className="p-6 text-center">
+                <p className="text-sm text-gray-600 mb-2">{t[lang].seoKeywords}</p>
+                <p className="text-3xl font-bold text-gray-900">{app.keywordCount}</p>
+                <p className="text-xs text-gray-500 mt-1">{t[lang].trackedKeywords}</p>
+              </div>
+            )}
           </div>
         </div>
 

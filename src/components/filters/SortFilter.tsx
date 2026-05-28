@@ -21,7 +21,6 @@ export function SortFilter({ selectedSort, onChange }: SortFilterProps) {
         <option value="rank">{t[lang].sortRank}</option>
         <option value="visits">{t[lang].sortVisits}</option>
         <option value="change">{t[lang].sortGrowth}</option>
-        <option value="keywords">{t[lang].sortKeywords}</option>
       </select>
     </div>
   );

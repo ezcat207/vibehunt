@@ -40,22 +40,22 @@ export const PLATFORM_CONFIGS: Record<Exclude<Platform, 'all'>, PlatformConfig> 
   vercel: {
     name: 'vercel',
     displayName: 'Vercel',
-    color: '#000000',
+    color: '#171717',
   },
   lovable: {
     name: 'lovable',
     displayName: 'Lovable',
-    color: '#FF6B6B',
+    color: '#E11D48',
   },
   base44: {
     name: 'base44',
     displayName: 'Base44',
-    color: '#4ECDC4',
+    color: '#0891B2',
   },
   youware: {
     name: 'youware',
     displayName: 'Youware',
-    color: '#95E1D3',
+    color: '#7C3AED',
   },
 };
 

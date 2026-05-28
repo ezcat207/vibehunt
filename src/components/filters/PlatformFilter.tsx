@@ -17,12 +17,11 @@ export function PlatformFilter({ selectedPlatform, onChange, stats }: PlatformFi
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <label className="text-sm font-medium text-gray-700">{t[lang].platform}</label>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         {platforms.map(platform => {
           const isActive = selectedPlatform === platform;
           const config = platform === 'all'
-            ? { name: 'all', displayName: 'All', color: '#6B7280' }
+            ? { name: 'all', displayName: lang === 'zh' ? '全部' : 'All', color: '#334155' }
             : PLATFORM_CONFIGS[platform as Exclude<Platform, 'all'>];
 
           const count = stats?.[platform] || 0;
@@ -31,19 +30,17 @@ export function PlatformFilter({ selectedPlatform, onChange, stats }: PlatformFi
             <button
               key={platform}
               onClick={() => onChange(platform)}
-              className={`
-                px-4 py-2 rounded-lg text-sm font-medium transition-all
-                ${isActive
-                  ? 'bg-gray-900 text-white shadow-md'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400 hover:shadow-sm'
-                }
-              `}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                isActive
+                  ? 'text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
               style={isActive ? { backgroundColor: config.color } : {}}
             >
-              <span className="capitalize">{config.displayName}</span>
+              {config.displayName}
               {count > 0 && (
-                <span className={`ml-2 text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
-                  ({count})
+                <span className={`ml-1 ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
+                  {count}
                 </span>
               )}
             </button>
