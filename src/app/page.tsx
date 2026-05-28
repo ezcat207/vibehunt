@@ -21,13 +21,19 @@ export default function Home() {
   const { lang, toggle } = useLang();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('all');
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('2026-04');
   const [sortBy, setSortBy] = useState<'visits' | 'change' | 'keywords' | 'rank'>('rank');
   const [searchQuery, setSearchQuery] = useState('');
   const [top10Platform, setTop10Platform] = useState<RankedPlatform>('vercel');
 
   // 加载数据
   const allApps = useMemo(() => loadAppsData(selectedPlatform), [selectedPlatform]);
+
+  // 最新月份（用于默认值和 All 模式去重的优先级）
+  const latestMonth = useMemo(() => {
+    const months = [...new Set(allApps.map(a => a.month))].sort();
+    return months[months.length - 1] ?? 'all';
+  }, [allApps]);
 
   // Top 10 leaderboard data
   const top10Data = useMemo(() => {
@@ -47,9 +53,19 @@ export default function Home() {
   const filteredApps = useMemo(() => {
     let filtered = allApps;
 
-    // 按月份筛选
+    // 按月份筛选；All 模式下每个 URL 只保留最新月份记录
     if (selectedMonth !== 'all') {
       filtered = filtered.filter(app => app.month === selectedMonth);
+    } else {
+      // 去重：同一 URL 只保留最新月份的那条记录
+      const latestByUrl = new Map<string, typeof allApps[0]>();
+      for (const app of filtered) {
+        const existing = latestByUrl.get(app.url);
+        if (!existing || app.month > existing.month) {
+          latestByUrl.set(app.url, app);
+        }
+      }
+      filtered = Array.from(latestByUrl.values());
     }
 
     // 按搜索关键词筛选
