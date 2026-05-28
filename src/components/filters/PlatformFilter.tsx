@@ -2,6 +2,8 @@
 
 import type { Platform } from '@/lib/types';
 import { PLATFORM_CONFIGS } from '@/lib/types';
+import { useLang } from '@/contexts/LanguageContext';
+import { t } from '@/locales';
 
 interface PlatformFilterProps {
   selectedPlatform: Platform;
@@ -10,11 +12,12 @@ interface PlatformFilterProps {
 }
 
 export function PlatformFilter({ selectedPlatform, onChange, stats }: PlatformFilterProps) {
+  const { lang } = useLang();
   const platforms: Platform[] = ['all', 'vercel', 'lovable', 'base44', 'youware'];
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <label className="text-sm font-medium text-gray-700">Platform:</label>
+      <label className="text-sm font-medium text-gray-700">{t[lang].platform}</label>
       <div className="flex gap-2">
         {platforms.map(platform => {
           const isActive = selectedPlatform === platform;

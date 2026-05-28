@@ -11,11 +11,14 @@ import { loadAppsData, getPlatformStats } from '@/lib/data-loader';
 import { formatNumber, formatPercentage } from '@/lib/utils';
 import { PLATFORM_CONFIGS, MONTH_DISPLAY } from '@/lib/types';
 import type { Platform } from '@/lib/types';
+import { useLang } from '@/contexts/LanguageContext';
+import { t } from '@/locales';
 
 type ViewMode = 'grid' | 'top10';
 type RankedPlatform = Exclude<Platform, 'all'>;
 
 export default function Home() {
+  const { lang, toggle } = useLang();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
@@ -85,22 +88,31 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">VibeHunt</h1>
-              <p className="text-sm text-gray-600 mt-1">Discover trending Vibe Coding apps</p>
+              <p className="text-sm text-gray-600 mt-1">{t[lang].tagline}</p>
             </div>
-            {/* View mode toggle */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-3">
+              {/* Language toggle */}
               <button
-                onClick={() => setViewMode('grid')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={toggle}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm transition-all"
               >
-                All Apps
+                {lang === 'en' ? '中文' : 'EN'}
               </button>
-              <button
-                onClick={() => setViewMode('top10')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'top10' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                🏆 Top 10 榜单
-              </button>
+              {/* View mode toggle */}
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  {t[lang].allApps}
+                </button>
+                <button
+                  onClick={() => setViewMode('top10')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'top10' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  {t[lang].top10Charts}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -108,7 +120,7 @@ export default function Home() {
             <SearchBar
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search by name, domain, or URL..."
+              placeholder={t[lang].searchPlaceholder}
             />
           )}
         </div>
@@ -134,7 +146,7 @@ export default function Home() {
                   onChange={setSortBy}
                 />
                 <span className="ml-auto text-sm text-gray-500">
-                  <span className="font-medium text-gray-900">{filteredApps.length}</span> apps
+                  {t[lang].appsFound(filteredApps.length)}
                 </span>
               </div>
             </div>
@@ -149,7 +161,7 @@ export default function Home() {
           <div>
             {/* Platform selector */}
             <div className="flex items-center gap-3 mb-6 flex-wrap">
-              <span className="text-sm font-medium text-gray-700">平台：</span>
+              <span className="text-sm font-medium text-gray-700">{t[lang].top10Platform}</span>
               {(['vercel', 'lovable', 'base44', 'youware'] as RankedPlatform[]).map(p => {
                 const cfg = PLATFORM_CONFIGS[p];
                 return (
@@ -177,19 +189,18 @@ export default function Home() {
                     className="px-6 py-3 flex items-center gap-2"
                     style={{ backgroundColor: PLATFORM_CONFIGS[top10Platform].color }}
                   >
-                    <span className="text-white font-semibold">{MONTH_DISPLAY[month] || month}</span>
-                    <span className="ml-auto text-white/80 text-sm">{PLATFORM_CONFIGS[top10Platform].displayName} Top 10</span>
+                    <span className="text-white font-semibold">{t[lang].top10Title(PLATFORM_CONFIGS[top10Platform].displayName, MONTH_DISPLAY[month] || month)}</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full">
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase w-12">排名</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">应用</th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">月访问</th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">增长</th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">关键词</th>
-                          <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-20">详情</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase w-12">{t[lang].colRank}</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t[lang].colApp}</th>
+                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">{t[lang].colVisits}</th>
+                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">{t[lang].colGrowth}</th>
+                          <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">{t[lang].colKeywords}</th>
+                          <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-20">{t[lang].colDetail}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -234,7 +245,7 @@ export default function Home() {
                                   href={`/app/${app.id}`}
                                   className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
                                 >
-                                  详情 →
+                                  {t[lang].detail}
                                 </Link>
                               </td>
                             </tr>
@@ -252,8 +263,8 @@ export default function Home() {
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No apps found</h3>
-            <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">{t[lang].noAppsFound}</h3>
+            <p className="mt-1 text-sm text-gray-500">{t[lang].adjustFilters}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -268,7 +279,7 @@ export default function Home() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-gray-500">
-            Built with ❤️ using Claude Code • Data from public traffic analytics
+            {t[lang].footer}
           </p>
         </div>
       </footer>
